@@ -33,6 +33,7 @@ class WritelessOverlayService : Service() {
     const val EXTRA_MINIMIZE = "minimize"
     const val EXTRA_CLOSE = "close"
     const val EXTRA_EMPTY = "empty"
+    const val EXTRA_COPIED = "copied"
     private const val CHANNEL_ID = "writeless_overlay"
     private const val NOTIFICATION_ID = 5801
     private const val DATABASE_NAME = "writeless.db"
@@ -49,6 +50,7 @@ class WritelessOverlayService : Service() {
   private var minimizeLabel = "Minimize"
   private var closeLabel = "Close"
   private var emptyLabel = "No saved messages"
+  private var copiedLabel = "Copied"
   private var positionX = 0
   private var positionY = 220
 
@@ -65,6 +67,7 @@ class WritelessOverlayService : Service() {
       minimizeLabel = intent.getStringExtra(EXTRA_MINIMIZE) ?: minimizeLabel
       closeLabel = intent.getStringExtra(EXTRA_CLOSE) ?: closeLabel
       emptyLabel = intent.getStringExtra(EXTRA_EMPTY) ?: emptyLabel
+      copiedLabel = intent.getStringExtra(EXTRA_COPIED) ?: copiedLabel
       startAsForegroundService()
       if (bubble == null && panel == null) showBubble()
     }
@@ -284,7 +287,7 @@ class WritelessOverlayService : Service() {
   private fun copyMessage(content: String) {
     val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Writeless message", content))
-    Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, copiedLabel, Toast.LENGTH_SHORT).show()
   }
 
   private fun actionButton(symbol: String, description: String, action: () -> Unit): TextView {
