@@ -16,6 +16,12 @@ class WritelessOverlayModule : Module() {
       Settings.canDrawOverlays(context)
     }
 
+    Function("isRunning") {
+      val context = appContext.reactContext ?: return@Function false
+      context.getSharedPreferences("writeless_overlay", 0)
+        .getBoolean("running", false)
+    }
+
     Function("openPermissionSettings") {
       val context = appContext.reactContext ?: return@Function
       val intent = Intent(
