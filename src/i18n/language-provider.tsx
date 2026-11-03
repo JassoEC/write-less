@@ -45,7 +45,7 @@ const translations = {
     overlayPermissionGranted: 'Permiso de superposición concedido.', overlayPermissionNeeded: 'Android necesita tu permiso para mostrar Writeless sobre otras aplicaciones.',
     overlayEnable: 'Activar ventana flotante', overlayDisable: 'Desactivar ventana flotante',
     overlayOpenApp: 'Abrir app principal', overlayMinimize: 'Minimizar', overlayClose: 'Cerrar',
-    overlayEmpty: 'Aún no tienes mensajes guardados.', overlayCopied: 'Copiado', overlaySearchHint: 'Buscar mensajes',
+    overlayEmpty: 'Aún no tienes mensajes guardados.', overlayCopied: 'Copiado', overlaySearchHint: 'Buscar mensajes', overlayNoMatches: 'No hay mensajes coincidentes',
   },
   en: {
     messages: 'Messages', settings: 'Settings', yourMessages: 'Your messages',
@@ -86,7 +86,7 @@ const translations = {
     overlayPermissionGranted: 'Overlay permission granted.', overlayPermissionNeeded: 'Android needs your permission to display Writeless over other apps.',
     overlayEnable: 'Enable floating panel', overlayDisable: 'Disable floating panel',
     overlayOpenApp: 'Open main app', overlayMinimize: 'Minimize', overlayClose: 'Close',
-    overlayEmpty: 'You have no saved messages yet.', overlayCopied: 'Copied', overlaySearchHint: 'Search messages',
+    overlayEmpty: 'You have no saved messages yet.', overlayCopied: 'Copied', overlaySearchHint: 'Search messages', overlayNoMatches: 'No matching messages',
   },
 } as const;
 
