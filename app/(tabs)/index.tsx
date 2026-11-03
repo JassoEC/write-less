@@ -26,6 +26,7 @@ export default function MessagesScreen() {
   const deleteMessage = useMessagesStore((state) => state.deleteMessage);
   const toggleFavorite = useMessagesStore((state) => state.toggleFavorite);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showCopyConfirmation, setShowCopyConfirmation] = useState(true);
   const [copyConfirmationVisible, setCopyConfirmationVisible] = useState(false);
   const [doNotShowCopyConfirmation, setDoNotShowCopyConfirmation] = useState(false);
@@ -37,6 +38,11 @@ export default function MessagesScreen() {
       });
     }, [loadMessages]),
   );
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
   useEffect(() => {
     let isMounted = true;
@@ -54,7 +60,7 @@ export default function MessagesScreen() {
   }, []);
 
   const filteredMessages = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase();
+    const query = debouncedSearch.trim().toLocaleLowerCase();
     const matching = messages.filter((message) =>
       message.title.toLocaleLowerCase().includes(query),
     );
@@ -62,7 +68,7 @@ export default function MessagesScreen() {
     const regularMessages = matching.filter((message) => !message.isFavorite);
 
     return { favorites, ordered: [...favorites, ...regularMessages] };
-  }, [messages, search]);
+  }, [messages, debouncedSearch]);
 
   const handleCopy = async (content: string) => {
     try {
@@ -180,19 +186,19 @@ export default function MessagesScreen() {
                   <Text style={styles.favoriteIcon}>{message.isFavorite ? '★' : '☆'}</Text>
                 </Pressable>
                 <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Copy message: ${message.title}`}
+                  onPress={() => void handleCopy(message.content)}
                   style={styles.messageText}
-                  onPress={() => router.push({ pathname: '/messages/[id]', params: { id: message.id } })}
                 >
                   <Text style={styles.messageTitle}>{message.title}</Text>
-                  <Text style={styles.messagePreview} numberOfLines={2}>
+                  <Text style={styles.messagePreview} numberOfLines={1}>
                     {message.content}
                   </Text>
                 </Pressable>
+                <Text style={styles.copyIcon} accessible={false}>⧉</Text>
               </View>
               <View style={styles.cardActions}>
-                <Pressable onPress={() => void handleCopy(message.content)} style={styles.copyButton}>
-                  <Text style={styles.copyButtonText}>Copy message</Text>
-                </Pressable>
                 <Pressable
                   onPress={() => router.push({ pathname: '/messages/[id]', params: { id: message.id } })}
                   style={styles.textAction}
@@ -267,9 +273,8 @@ const styles = StyleSheet.create({
   messageText: { flex: 1, gap: 5 },
   messageTitle: { color: '#20201D', fontSize: 16, fontWeight: '700' },
   messagePreview: { color: '#77776F', fontSize: 13, lineHeight: 19 },
-  cardActions: { alignItems: 'center', borderTopColor: '#EEEEEA', borderTopWidth: 1, flexDirection: 'row', gap: 18, marginTop: 14, paddingTop: 12 },
-  copyButton: { backgroundColor: '#F0F0EC', borderRadius: 9, paddingHorizontal: 12, paddingVertical: 8 },
-  copyButtonText: { color: '#20201D', fontSize: 12, fontWeight: '700' },
+  cardActions: { alignItems: 'center', flexDirection: 'row', gap: 18, justifyContent: 'flex-end', marginTop: 6 },
+  copyIcon: { color: '#898981', fontSize: 20, paddingLeft: 8 },
   textAction: { paddingVertical: 8 },
   textActionText: { color: '#686860', fontSize: 12, fontWeight: '600' },
   deleteText: { color: '#B34D45', fontSize: 12, fontWeight: '600' },
