@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMessagesStore } from '@/store/messages-store';
 
@@ -34,6 +35,7 @@ export default function NewMessageScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'New message' }} />
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <Text style={styles.label}>TITLE</Text>
         <TextInput
@@ -60,11 +62,13 @@ export default function NewMessageScreen() {
           <Text style={styles.saveButtonText}>{isSaving ? 'Saving…' : 'Save message'}</Text>
         </Pressable>
       </ScrollView>
+      </SafeAreaView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: { flex: 1 },
   container: { flexGrow: 1, padding: 22 },
   label: { color: '#77776F', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginBottom: 9, marginTop: 12 },
   titleInput: { backgroundColor: '#FFFFFF', borderColor: '#E2E2DC', borderRadius: 12, borderWidth: 1, color: '#20201D', fontSize: 16, padding: 15 },
