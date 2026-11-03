@@ -43,7 +43,7 @@ Rebuild the native application after changing native code or native configuratio
 
 ## Architecture
 
-- `app/`: Expo Router routes and layouts.
+- `app/`: Expo Router routes, tab navigation and layouts.
 - `src/core/`: domain types and repository contracts.
 - `src/features/`: product feature UI and application logic.
 - `src/infrastructure/`: SQLite and platform service implementations.
@@ -53,6 +53,17 @@ Rebuild the native application after changing native code or native configuratio
 - `modules/`: local Expo native modules.
 
 The MVP is local-first. Messages are stored on-device; no account, backend, or cloud sync is required.
+
+## Implemented
+
+- Create, edit and delete reusable messages.
+- Search messages by title.
+- Copy message content to the system clipboard.
+- Optionally dismiss copy confirmations permanently.
+- Mark messages as favorites.
+- Bottom-tab navigation for Messages and Settings.
+- Persist messages and app preferences in SQLite across app restarts.
+- Version the SQLite schema with `PRAGMA user_version`.
 
 ## Product identity
 

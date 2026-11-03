@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -12,10 +13,10 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: '#F7F7F5' },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Writeless' }} />
-        <Stack.Screen name="messages/index" options={{ title: 'Messages' }} />
-        <Stack.Screen name="settings/index" options={{ title: 'Settings' }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="messages/new" options={{ title: 'New message', presentation: 'modal' }} />
+        <Stack.Screen name="messages/[id]" options={{ title: 'Edit message', presentation: 'modal' }} />
       </Stack>
-    </>
+    </SafeAreaProvider>
   );
 }
