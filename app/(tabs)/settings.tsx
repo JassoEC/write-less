@@ -57,6 +57,7 @@ export default function SettingsScreen() {
       empty: t('overlayEmpty'),
       copied: t('overlayCopied'),
       searchHint: t('overlaySearchHint'),
+      noMatches: t('overlayNoMatches'),
     });
     setOverlayRunning(true);
   };
