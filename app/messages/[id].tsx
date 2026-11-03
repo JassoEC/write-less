@@ -4,9 +4,11 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMessagesStore } from '@/store/messages-store';
+import { useLanguage } from '@/i18n/language-provider';
 
 export default function EditMessageScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const message = useMessagesStore((state) => state.messages.find((item) => item.id === id));
   const loadMessages = useMessagesStore((state) => state.loadMessages);
@@ -18,7 +20,7 @@ export default function EditMessageScreen() {
   useEffect(() => {
     if (!message) {
       void loadMessages().catch(() => {
-        Alert.alert('Unable to load', 'This message could not be loaded.');
+        Alert.alert(t('unableToLoad'), t('messageLoadFailed'));
       });
     }
   }, [loadMessages, message]);
@@ -35,7 +37,7 @@ export default function EditMessageScreen() {
     const cleanContent = content.trim();
 
     if (!cleanTitle || !cleanContent) {
-      Alert.alert('Missing information', 'Add a title and message before saving.');
+      Alert.alert(t('missingInfo'), t('addTitleAndMessage'));
       return;
     }
 
@@ -44,7 +46,7 @@ export default function EditMessageScreen() {
       await updateMessage(id, cleanTitle, cleanContent);
       router.back();
     } catch {
-      Alert.alert('Could not save', 'Your changes were not saved. Please try again.');
+      Alert.alert(t('couldNotSave'), t('changesFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -53,12 +55,12 @@ export default function EditMessageScreen() {
   if (!message) {
     return (
       <>
-        <Stack.Screen options={{ title: 'Edit message' }} />
+        <Stack.Screen options={{ title: t('editMessage') }} />
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
         <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.notFound}>Message not found.</Text>
+          <Text style={styles.notFound}>{t('notFound')}</Text>
           <Pressable onPress={() => router.back()} style={styles.saveButton}>
-            <Text style={styles.saveButtonText}>Go back</Text>
+            <Text style={styles.saveButtonText}>{t('goBack')}</Text>
           </Pressable>
         </ScrollView>
         </SafeAreaView>
@@ -71,27 +73,27 @@ export default function EditMessageScreen() {
       <Stack.Screen options={{ title: 'Edit message' }} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>TITLE</Text>
+        <Text style={styles.label}>{t('title')}</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="Message title"
+          placeholder={t('titlePlaceholder')}
           placeholderTextColor="#A1A198"
           maxLength={80}
           style={styles.titleInput}
         />
-        <Text style={styles.label}>MESSAGE</Text>
+        <Text style={styles.label}>{t('message')}</Text>
         <TextInput
           value={content}
           onChangeText={setContent}
-          placeholder="Write your reusable reply…"
+          placeholder={t('reusablePlaceholder')}
           placeholderTextColor="#A1A198"
           multiline
           textAlignVertical="top"
           style={styles.contentInput}
         />
         <Pressable disabled={isSaving} onPress={() => void save()} style={[styles.saveButton, isSaving && styles.disabled]}>
-          <Text style={styles.saveButtonText}>{isSaving ? 'Saving…' : 'Save changes'}</Text>
+          <Text style={styles.saveButtonText}>{isSaving ? t('saving') : t('saveChanges')}</Text>
         </Pressable>
       </ScrollView>
       </SafeAreaView>
