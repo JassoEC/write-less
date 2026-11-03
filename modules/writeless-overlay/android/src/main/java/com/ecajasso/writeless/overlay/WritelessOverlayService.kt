@@ -198,7 +198,7 @@ class WritelessOverlayService : Service() {
     val searchInput = EditText(this).apply {
       hint = searchHint
       textSize = 13f
-      singleLine = true
+      setSingleLine(true)
       setTextColor(Color.rgb(45, 49, 57))
       setHintTextColor(Color.rgb(135, 140, 149))
       setPadding(dp(10), 0, dp(10), 0)
