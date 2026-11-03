@@ -9,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { copyText } from '@/infrastructure/clipboard/clipboard';
@@ -103,7 +104,7 @@ export default function MessagesScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.heading}>
         <View style={styles.headingText}>
           <Text style={styles.title}>Your messages</Text>
@@ -236,7 +237,7 @@ export default function MessagesScreen() {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 }
 
