@@ -38,6 +38,7 @@ class WritelessOverlayService : Service() {
     const val EXTRA_EMPTY = "empty"
     const val EXTRA_COPIED = "copied"
     const val EXTRA_SEARCH_HINT = "search_hint"
+    const val EXTRA_NO_MATCHES = "no_matches"
     private const val CHANNEL_ID = "writeless_overlay"
     private const val NOTIFICATION_ID = 5801
     private const val DATABASE_NAME = "writeless.db"
@@ -57,6 +58,7 @@ class WritelessOverlayService : Service() {
   private var emptyLabel = "No saved messages"
   private var copiedLabel = "Copied"
   private var searchHint = "Search messages"
+  private var noMatchesLabel = "No matching messages"
   private var positionX = 0
   private var positionY = 220
 
@@ -75,6 +77,7 @@ class WritelessOverlayService : Service() {
       emptyLabel = intent.getStringExtra(EXTRA_EMPTY) ?: emptyLabel
       copiedLabel = intent.getStringExtra(EXTRA_COPIED) ?: copiedLabel
       searchHint = intent.getStringExtra(EXTRA_SEARCH_HINT) ?: searchHint
+      noMatchesLabel = intent.getStringExtra(EXTRA_NO_MATCHES) ?: noMatchesLabel
       startAsForegroundService()
       if (bubble == null && panel == null) showBubble()
     }
@@ -145,8 +148,8 @@ class WritelessOverlayService : Service() {
       size,
       size,
       overlayWindowType(),
-      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
       PixelFormat.TRANSLUCENT
     ).apply {
       gravity = Gravity.TOP or Gravity.START
@@ -212,7 +215,7 @@ class WritelessOverlayService : Service() {
       val matchingRows = rows.filter { it.first.contains(query, ignoreCase = true) || it.second.contains(query, ignoreCase = true) }
       if (matchingRows.isEmpty()) {
         messages.addView(TextView(this).apply {
-          text = if (rows.isEmpty()) emptyLabel else searchHint
+          text = if (rows.isEmpty()) emptyLabel else noMatchesLabel
           textSize = 13f
           setTextColor(Color.rgb(120, 125, 134))
           setPadding(dp(2), dp(14), 0, dp(14))
@@ -269,10 +272,11 @@ class WritelessOverlayService : Service() {
       width,
       WindowManager.LayoutParams.WRAP_CONTENT,
       overlayWindowType(),
-      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
       PixelFormat.TRANSLUCENT
     ).apply {
+      softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
       gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
       x = 0
       y = positionY.coerceAtLeast(dp(24))
