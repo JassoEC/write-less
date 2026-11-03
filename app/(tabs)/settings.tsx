@@ -55,6 +55,7 @@ export default function SettingsScreen() {
       minimize: t('overlayMinimize'),
       close: t('overlayClose'),
       empty: t('overlayEmpty'),
+      copied: t('overlayCopied'),
     });
     setOverlayRunning(true);
   };
