@@ -206,6 +206,11 @@ class WritelessOverlayService : Service() {
           setPadding(dp(10), dp(10), dp(10), dp(10))
           background = rounded(Color.rgb(240, 242, 246), dp(12).toFloat())
           setOnClickListener { copyMessage(message.second) }
+          setOnLongClickListener {
+            copyMessage(message.second)
+            minimize()
+            true
+          }
         }
         row.addView(TextView(this).apply {
           text = message.first
