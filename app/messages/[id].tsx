@@ -57,7 +57,7 @@ export default function EditMessageScreen() {
       <>
         <Stack.Screen options={{ title: t('editMessage') }} />
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-        <ScrollView contentContainerStyle={styles.container}>
+        <ScrollView style={styles.formScroll} contentContainerStyle={styles.container}>
           <Text style={styles.notFound}>{t('notFound')}</Text>
           <Pressable onPress={() => router.back()} style={styles.saveButton}>
             <Text style={styles.saveButtonText}>{t('goBack')}</Text>
@@ -72,7 +72,7 @@ export default function EditMessageScreen() {
     <>
       <Stack.Screen options={{ title: 'Edit message' }} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.formScroll} contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Text style={styles.label}>{t('title')}</Text>
         <TextInput
           value={title}
@@ -103,7 +103,8 @@ export default function EditMessageScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  container: { flexGrow: 1, padding: 22 },
+  formScroll: { flex: 1 },
+  container: { flexGrow: 1, padding: 22, paddingBottom: 40 },
   label: { color: '#77776F', fontSize: 11, fontWeight: '700', letterSpacing: 1.4, marginBottom: 9, marginTop: 12 },
   titleInput: { backgroundColor: '#FFFFFF', borderColor: '#E2E2DC', borderRadius: 12, borderWidth: 1, color: '#20201D', fontSize: 16, padding: 15 },
   contentInput: { backgroundColor: '#FFFFFF', borderColor: '#E2E2DC', borderRadius: 12, borderWidth: 1, color: '#20201D', fontSize: 15, lineHeight: 23, minHeight: 190, padding: 15 },
