@@ -54,6 +54,14 @@ Rebuild the native application after changing native code or native configuratio
 
 The MVP is local-first. Messages are stored on-device; no account, backend, or cloud sync is required.
 
+## Implemented
+
+- Create, edit and delete reusable messages.
+- Copy message content to the system clipboard.
+- Mark messages as favorites.
+- Persist messages in SQLite across app restarts.
+- Version the SQLite schema with `PRAGMA user_version`.
+
 ## Product identity
 
 - Expo slug: `writeless`
