@@ -37,6 +37,7 @@ class WritelessOverlayService : Service() {
     const val EXTRA_CLOSE = "close"
     const val EXTRA_EMPTY = "empty"
     const val EXTRA_COPIED = "copied"
+    const val EXTRA_COPIED_AND_MINIMIZED = "copied_and_minimized"
     const val EXTRA_SEARCH_HINT = "search_hint"
     const val EXTRA_NO_MATCHES = "no_matches"
     private const val CHANNEL_ID = "writeless_overlay"
@@ -56,7 +57,8 @@ class WritelessOverlayService : Service() {
   private var minimizeLabel = "Minimize"
   private var closeLabel = "Close"
   private var emptyLabel = "No saved messages"
-  private var copiedLabel = "Copied"
+  private var copiedLabel = "Message copied"
+  private var copiedAndMinimizedLabel = "Copied · panel minimized"
   private var searchHint = "Search messages"
   private var noMatchesLabel = "No matching messages"
   private var positionX = 0
@@ -76,6 +78,7 @@ class WritelessOverlayService : Service() {
       closeLabel = intent.getStringExtra(EXTRA_CLOSE) ?: closeLabel
       emptyLabel = intent.getStringExtra(EXTRA_EMPTY) ?: emptyLabel
       copiedLabel = intent.getStringExtra(EXTRA_COPIED) ?: copiedLabel
+      copiedAndMinimizedLabel = intent.getStringExtra(EXTRA_COPIED_AND_MINIMIZED) ?: copiedAndMinimizedLabel
       searchHint = intent.getStringExtra(EXTRA_SEARCH_HINT) ?: searchHint
       noMatchesLabel = intent.getStringExtra(EXTRA_NO_MATCHES) ?: noMatchesLabel
       startAsForegroundService()
@@ -228,7 +231,7 @@ class WritelessOverlayService : Service() {
           background = rounded(Color.rgb(240, 242, 246), dp(12).toFloat())
           setOnClickListener { copyMessage(message.second) }
           setOnLongClickListener {
-            copyMessage(message.second)
+            copyMessage(message.second, copiedAndMinimizedLabel)
             minimize()
             true
           }
@@ -318,10 +321,10 @@ class WritelessOverlayService : Service() {
     }
   }
 
-  private fun copyMessage(content: String) {
+  private fun copyMessage(content: String, feedback: String = copiedLabel) {
     val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Writeless message", content))
-    Toast.makeText(this, copiedLabel, Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, feedback, Toast.LENGTH_SHORT).show()
   }
 
   private fun actionButton(symbol: String, description: String, action: () -> Unit): TextView {
