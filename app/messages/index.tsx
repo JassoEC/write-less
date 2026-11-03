@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Link, useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import { copyText } from '@/infrastructure/clipboard/clipboard';
 import { useMessagesStore } from '@/store/messages-store';
@@ -85,13 +85,17 @@ export default function MessagesScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
           {favorites.length > 0 && <Text style={styles.sectionLabel}>FAVORITES</Text>}
-          {orderedMessages.map((message, index) => (
+          {orderedMessages.map((message) => (
             <View key={message.id} style={styles.messageCard}>
               <View style={styles.cardHeading}>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={message.isFavorite ? 'Remove favorite' : 'Add favorite'}
-                  onPress={() => void toggleFavorite(message.id)}
+                  onPress={() => {
+                    void toggleFavorite(message.id).catch(() =>
+                      Alert.alert('Update failed', 'The favorite status could not be changed.'),
+                    );
+                  }}
                   hitSlop={8}
                   style={styles.favoriteButton}
                 >
