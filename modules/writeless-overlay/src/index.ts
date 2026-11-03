@@ -5,10 +5,12 @@ type OverlayLabels = {
   minimize: string;
   close: string;
   empty: string;
+  copied: string;
 };
 
 type WritelessOverlayNativeModule = {
   hasPermission(): boolean;
+  isRunning(): boolean;
   openPermissionSettings(): void;
   start(labels: OverlayLabels): void;
   stop(): void;
