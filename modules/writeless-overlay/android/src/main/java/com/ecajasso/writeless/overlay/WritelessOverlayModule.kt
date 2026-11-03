@@ -3,7 +3,6 @@ package com.ecajasso.writeless.overlay
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
-import androidx.core.content.ContextCompat
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -43,7 +42,11 @@ class WritelessOverlayModule : Module() {
         putExtra(WritelessOverlayService.EXTRA_CLOSE, labels["close"] ?: "Close")
         putExtra(WritelessOverlayService.EXTRA_EMPTY, labels["empty"] ?: "No saved messages")
       }
-      ContextCompat.startForegroundService(context, intent)
+      if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+        context.startForegroundService(intent)
+      } else {
+        context.startService(intent)
+      }
     }
 
     Function("stop") {
