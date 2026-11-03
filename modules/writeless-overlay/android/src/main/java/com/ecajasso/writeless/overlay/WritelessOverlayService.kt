@@ -137,7 +137,7 @@ class WritelessOverlayService : Service() {
     val params = WindowManager.LayoutParams(
       size,
       size,
-      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+      overlayWindowType(),
       WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
       PixelFormat.TRANSLUCENT
@@ -360,6 +360,14 @@ class WritelessOverlayService : Service() {
       }
     }
   }
+
+  private fun overlayWindowType(): Int =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+    } else {
+      @Suppress("DEPRECATION")
+      WindowManager.LayoutParams.TYPE_PHONE
+    }
 
   private fun rounded(color: Int, radius: Float) = GradientDrawable().apply {
     setColor(color)
