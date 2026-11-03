@@ -31,7 +31,7 @@ Writeless uses Expo Router for file-based navigation. Route files live in `app/`
 
 ### Native development
 
-A development build is required for custom native modules. Expo Go cannot load the future local Kotlin floating-panel module.
+A development build is required for custom native modules. Expo Go cannot load the Android floating-panel module.
 
 ```bash
 npx expo prebuild
@@ -40,6 +40,20 @@ npx expo run:ios
 ```
 
 Rebuild the native application after changing native code or native configuration.
+
+## Android floating panel
+
+The Android-only floating panel is implemented as a local Expo module in `modules/writeless-overlay`.
+
+- Enable or disable the panel from Settings.
+- Android requires the user to grant the special "Display over other apps" permission.
+- The panel can be dragged, expanded and minimized.
+- Selecting a saved message copies its content to the clipboard; the panel remains open for consecutive copies.
+- The panel can open the main Writeless app or be closed completely.
+- A foreground-service notification indicates that the panel is active.
+- The native service reads the existing `writeless.db` SQLite file in Expo SQLite's Android database directory. It does not create a second database or modify messages.
+
+The overlay is Android-only. iOS keeps the regular in-app message workflow. A native development or production build is required; Expo Go is not supported for this feature.
 
 ## Architecture
 
@@ -64,6 +78,7 @@ The MVP is local-first. Messages are stored on-device; no account, backend, or c
 - Bottom-tab navigation for Messages and Settings.
 - Persist messages and app preferences in SQLite across app restarts.
 - Version the SQLite schema with `PRAGMA user_version`.
+- Android floating panel for copying saved messages over other apps.
 
 ## Product identity
 

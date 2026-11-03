@@ -41,6 +41,11 @@ const translations = {
     alwaysLight: 'Usar siempre la apariencia clara', dark: 'Oscuro',
     alwaysDark: 'Usar siempre la apariencia oscura', language: 'Idioma',
     spanish: 'Español', english: 'English',
+    overlayTitle: 'Ventana flotante', overlayDescription: 'Copia tus mensajes sobre otras aplicaciones sin salir de la conversación.',
+    overlayPermissionGranted: 'Permiso de superposición concedido.', overlayPermissionNeeded: 'Android necesita tu permiso para mostrar Writeless sobre otras aplicaciones.',
+    overlayEnable: 'Activar ventana flotante', overlayDisable: 'Desactivar ventana flotante',
+    overlayOpenApp: 'Abrir app principal', overlayMinimize: 'Minimizar', overlayClose: 'Cerrar',
+    overlayEmpty: 'Aún no tienes mensajes guardados.', overlayCopied: 'Copiado',
   },
   en: {
     messages: 'Messages', settings: 'Settings', yourMessages: 'Your messages',
@@ -77,6 +82,11 @@ const translations = {
     alwaysLight: 'Always use light appearance', dark: 'Dark',
     alwaysDark: 'Always use dark appearance', language: 'Language',
     spanish: 'Español', english: 'English',
+    overlayTitle: 'Floating panel', overlayDescription: 'Copy your messages over other apps without leaving the conversation.',
+    overlayPermissionGranted: 'Overlay permission granted.', overlayPermissionNeeded: 'Android needs your permission to display Writeless over other apps.',
+    overlayEnable: 'Enable floating panel', overlayDisable: 'Disable floating panel',
+    overlayOpenApp: 'Open main app', overlayMinimize: 'Minimize', overlayClose: 'Close',
+    overlayEmpty: 'You have no saved messages yet.', overlayCopied: 'Copied',
   },
 } as const;
 
