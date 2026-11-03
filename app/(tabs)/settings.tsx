@@ -12,7 +12,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, gap: 10, padding: 24 },
+  container: { flex: 1, gap: 10, padding: 24, paddingTop: 32 },
   title: { color: '#20201D', fontSize: 24, fontWeight: '700' },
   description: { color: '#686860', fontSize: 15, lineHeight: 23 },
 });

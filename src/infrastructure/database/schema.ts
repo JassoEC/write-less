@@ -1,6 +1,6 @@
 export const DATABASE_NAME = 'writeless.db';
 
-export const DATABASE_VERSION = 1;
+export const DATABASE_VERSION = 2;
 
 export const MIGRATIONS: Record<number, string> = {
   1: `
@@ -19,5 +19,11 @@ export const MIGRATIONS: Record<number, string> = {
 
     CREATE INDEX IF NOT EXISTS messages_favorite_idx
       ON messages(is_favorite);
+  `,
+  2: `
+    CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY NOT NULL,
+      value TEXT NOT NULL
+    );
   `,
 };

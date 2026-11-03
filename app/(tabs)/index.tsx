@@ -1,9 +1,21 @@
-import { useCallback } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { copyText } from '@/infrastructure/clipboard/clipboard';
+import { getAppSetting, setAppSetting } from '@/infrastructure/database/app-settings';
 import { useMessagesStore } from '@/store/messages-store';
+
+const HIDE_COPY_CONFIRMATION_KEY = 'hide_copy_confirmation';
 
 export default function MessagesScreen() {
   const router = useRouter();
@@ -12,6 +24,10 @@ export default function MessagesScreen() {
   const loadMessages = useMessagesStore((state) => state.loadMessages);
   const deleteMessage = useMessagesStore((state) => state.deleteMessage);
   const toggleFavorite = useMessagesStore((state) => state.toggleFavorite);
+  const [search, setSearch] = useState('');
+  const [showCopyConfirmation, setShowCopyConfirmation] = useState(true);
+  const [copyConfirmationVisible, setCopyConfirmationVisible] = useState(false);
+  const [doNotShowCopyConfirmation, setDoNotShowCopyConfirmation] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -21,12 +37,53 @@ export default function MessagesScreen() {
     }, [loadMessages]),
   );
 
+  useEffect(() => {
+    let isMounted = true;
+    void getAppSetting(HIDE_COPY_CONFIRMATION_KEY)
+      .then((value) => {
+        if (isMounted) setShowCopyConfirmation(value !== 'true');
+      })
+      .catch(() => {
+        if (isMounted) setShowCopyConfirmation(true);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredMessages = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase();
+    const matching = messages.filter((message) =>
+      message.title.toLocaleLowerCase().includes(query),
+    );
+    const favorites = matching.filter((message) => message.isFavorite);
+    const regularMessages = matching.filter((message) => !message.isFavorite);
+
+    return { favorites, ordered: [...favorites, ...regularMessages] };
+  }, [messages, search]);
+
   const handleCopy = async (content: string) => {
     try {
       await copyText(content);
-      Alert.alert('Copied', 'Message copied to your clipboard.');
+      if (showCopyConfirmation) {
+        setDoNotShowCopyConfirmation(false);
+        setCopyConfirmationVisible(true);
+      }
     } catch {
       Alert.alert('Copy failed', 'Please try again.');
+    }
+  };
+
+  const dismissCopyConfirmation = async () => {
+    setCopyConfirmationVisible(false);
+    if (doNotShowCopyConfirmation) {
+      try {
+        await setAppSetting(HIDE_COPY_CONFIRMATION_KEY, 'true');
+        setShowCopyConfirmation(false);
+      } catch {
+        Alert.alert('Preference not saved', 'The confirmation will continue to appear next time.');
+      }
     }
   };
 
@@ -45,14 +102,10 @@ export default function MessagesScreen() {
     ]);
   };
 
-  const favorites = messages.filter((message) => message.isFavorite);
-  const regularMessages = messages.filter((message) => !message.isFavorite);
-  const orderedMessages = [...favorites, ...regularMessages];
-
   return (
     <View style={styles.container}>
       <View style={styles.heading}>
-        <View>
+        <View style={styles.headingText}>
           <Text style={styles.title}>Your messages</Text>
           <Text style={styles.subtitle}>
             {messages.length === 1 ? '1 saved reply' : `${messages.length} saved replies`}
@@ -67,9 +120,23 @@ export default function MessagesScreen() {
         </Pressable>
       </View>
 
+      <View style={styles.searchContainer}>
+        <Text style={styles.searchIcon}>⌕</Text>
+        <TextInput
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search by title"
+          placeholderTextColor="#A1A198"
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+          style={styles.searchInput}
+          accessibilityLabel="Search messages by title"
+        />
+      </View>
+
       {isLoading && messages.length === 0 ? (
         <Text style={styles.helper}>Loading messages…</Text>
-      ) : orderedMessages.length === 0 ? (
+      ) : messages.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyTitle}>Nothing saved yet</Text>
           <Text style={styles.emptyDescription}>
@@ -82,10 +149,20 @@ export default function MessagesScreen() {
             <Text style={styles.emptyButtonText}>Create a message</Text>
           </Pressable>
         </View>
+      ) : filteredMessages.ordered.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyTitle}>No matching messages</Text>
+          <Text style={styles.emptyDescription}>Try another title or clear your search.</Text>
+          <Pressable onPress={() => setSearch('')} style={styles.emptyButton}>
+            <Text style={styles.emptyButtonText}>Clear search</Text>
+          </Pressable>
+        </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
-          {favorites.length > 0 && <Text style={styles.sectionLabel}>FAVORITES</Text>}
-          {orderedMessages.map((message) => (
+        <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+          {filteredMessages.favorites.length > 0 && (
+            <Text style={styles.sectionLabel}>FAVORITES</Text>
+          )}
+          {filteredMessages.ordered.map((message) => (
             <View key={message.id} style={styles.messageCard}>
               <View style={styles.cardHeading}>
                 <Pressable
@@ -129,24 +206,58 @@ export default function MessagesScreen() {
           ))}
         </ScrollView>
       )}
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={copyConfirmationVisible}
+        onRequestClose={() => void dismissCopyConfirmation()}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.confirmationCard}>
+            <Text style={styles.confirmationTitle}>Copied to clipboard</Text>
+            <Text style={styles.confirmationDescription}>
+              Your message is ready to paste in the conversation.
+            </Text>
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: doNotShowCopyConfirmation }}
+              onPress={() => setDoNotShowCopyConfirmation((value) => !value)}
+              style={styles.checkboxRow}
+            >
+              <View style={[styles.checkbox, doNotShowCopyConfirmation && styles.checkboxChecked]}>
+                {doNotShowCopyConfirmation && <Text style={styles.checkboxTick}>✓</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>Don't show this again</Text>
+            </Pressable>
+            <Pressable onPress={() => void dismissCopyConfirmation()} style={styles.confirmationButton}>
+              <Text style={styles.confirmationButtonText}>Got it</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
-  heading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
+  heading: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 18 },
+  headingText: { flex: 1 },
   title: { color: '#20201D', fontSize: 26, fontWeight: '700', letterSpacing: -0.7 },
   subtitle: { color: '#77776F', fontSize: 13, marginTop: 4 },
   addButton: { backgroundColor: '#20201D', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 11 },
   addButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '600' },
+  searchContainer: { alignItems: 'center', backgroundColor: '#FFFFFF', borderColor: '#E2E2DC', borderRadius: 12, borderWidth: 1, flexDirection: 'row', marginBottom: 18, paddingHorizontal: 13 },
+  searchIcon: { color: '#898981', fontSize: 24, marginRight: 8 },
+  searchInput: { color: '#20201D', flex: 1, fontSize: 15, paddingVertical: 13 },
   helper: { color: '#77776F', paddingVertical: 20 },
   emptyState: { alignItems: 'center', flex: 1, justifyContent: 'center', paddingHorizontal: 24, paddingBottom: 80 },
   emptyTitle: { color: '#20201D', fontSize: 20, fontWeight: '700' },
   emptyDescription: { color: '#77776F', fontSize: 14, lineHeight: 21, marginTop: 8, textAlign: 'center' },
   emptyButton: { backgroundColor: '#20201D', borderRadius: 12, marginTop: 22, paddingHorizontal: 20, paddingVertical: 13 },
   emptyButtonText: { color: '#FFFFFF', fontWeight: '600' },
-  list: { gap: 12, paddingBottom: 32 },
+  list: { gap: 12, paddingBottom: 24 },
   sectionLabel: { color: '#898981', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2, marginTop: 2 },
   messageCard: { backgroundColor: '#FFFFFF', borderColor: '#E8E8E3', borderRadius: 16, borderWidth: 1, padding: 16 },
   cardHeading: { alignItems: 'flex-start', flexDirection: 'row', gap: 10 },
@@ -161,4 +272,15 @@ const styles = StyleSheet.create({
   textAction: { paddingVertical: 8 },
   textActionText: { color: '#686860', fontSize: 12, fontWeight: '600' },
   deleteText: { color: '#B34D45', fontSize: 12, fontWeight: '600' },
+  modalBackdrop: { alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.35)', flex: 1, justifyContent: 'center', padding: 28 },
+  confirmationCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 22, width: '100%' },
+  confirmationTitle: { color: '#20201D', fontSize: 19, fontWeight: '700' },
+  confirmationDescription: { color: '#686860', fontSize: 14, lineHeight: 21, marginTop: 7 },
+  checkboxRow: { alignItems: 'center', flexDirection: 'row', gap: 10, marginTop: 22 },
+  checkbox: { alignItems: 'center', borderColor: '#B9B9B0', borderRadius: 5, borderWidth: 1, height: 21, justifyContent: 'center', width: 21 },
+  checkboxChecked: { backgroundColor: '#20201D', borderColor: '#20201D' },
+  checkboxTick: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  checkboxLabel: { color: '#45453F', fontSize: 14 },
+  confirmationButton: { alignItems: 'center', backgroundColor: '#20201D', borderRadius: 12, marginTop: 22, padding: 14 },
+  confirmationButtonText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
 });
