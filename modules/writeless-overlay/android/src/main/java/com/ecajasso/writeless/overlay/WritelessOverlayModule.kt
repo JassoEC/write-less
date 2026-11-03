@@ -39,7 +39,10 @@ class WritelessOverlayModule : Module() {
         putExtra(WritelessOverlayService.EXTRA_MINIMIZE, labels["minimize"] ?: "Minimize")
         putExtra(WritelessOverlayService.EXTRA_CLOSE, labels["close"] ?: "Close")
         putExtra(WritelessOverlayService.EXTRA_EMPTY, labels["empty"] ?: "No saved messages")
-        putExtra(WritelessOverlayService.EXTRA_COPIED, labels["copied"] ?: "Copied")
+        putExtra(WritelessOverlayService.EXTRA_COPIED, labels["copied"] ?: "Message copied")
+        putExtra(WritelessOverlayService.EXTRA_COPIED_AND_MINIMIZED, labels["copiedAndMinimized"] ?: "Copied · panel minimized")
+        putExtra(WritelessOverlayService.EXTRA_SEARCH_HINT, labels["searchHint"] ?: "Search messages")
+        putExtra(WritelessOverlayService.EXTRA_NO_MATCHES, labels["noMatches"] ?: "No matching messages")
       }
       if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
         context.startForegroundService(intent)
