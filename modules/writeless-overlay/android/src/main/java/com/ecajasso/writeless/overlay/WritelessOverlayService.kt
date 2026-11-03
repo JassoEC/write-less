@@ -238,7 +238,7 @@ class WritelessOverlayService : Service() {
     val params = WindowManager.LayoutParams(
       width,
       WindowManager.LayoutParams.WRAP_CONTENT,
-      WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+      overlayWindowType(),
       WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
         WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
       PixelFormat.TRANSLUCENT
