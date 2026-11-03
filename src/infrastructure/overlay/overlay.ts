@@ -10,6 +10,7 @@ type OverlayLabels = {
 
 type OverlayNativeModule = {
   hasPermission(): boolean;
+  isRunning(): boolean;
   openPermissionSettings(): void;
   start(labels: OverlayLabels): void;
   stop(): void;
@@ -22,6 +23,10 @@ const nativeModule =
 
 export function isOverlaySupported(): boolean {
   return Platform.OS === 'android';
+}
+
+export function isOverlayRunning(): boolean {
+  return nativeModule?.isRunning() ?? false;
 }
 
 export function hasOverlayPermission(): boolean {
