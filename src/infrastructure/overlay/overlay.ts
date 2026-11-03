@@ -7,6 +7,7 @@ type OverlayLabels = {
   close: string;
   empty: string;
   copied: string;
+  copiedAndMinimized: string;
   searchHint: string;
   noMatches: string;
 };
