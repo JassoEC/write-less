@@ -52,6 +52,7 @@ class WritelessOverlayService : Service() {
 
   override fun onCreate() {
     super.onCreate()
+    getSharedPreferences("writeless_overlay", MODE_PRIVATE).edit().putBoolean("running", true).apply()
     windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     createNotificationChannel()
   }
@@ -316,7 +317,8 @@ class WritelessOverlayService : Service() {
       private var moved = false
 
       override fun onTouch(view: View, event: MotionEvent): Boolean {
-        val params = if (view === bubble) bubbleParams else panelParams
+        val target = if (view === bubble) bubble else panel
+      val params = if (view === bubble) bubbleParams else panelParams
         when (event.action) {
           MotionEvent.ACTION_DOWN -> {
             downX = event.rawX
@@ -333,7 +335,7 @@ class WritelessOverlayService : Service() {
             if (moved && params != null) {
               params.x = startX + dx
               params.y = (startY + dy).coerceAtLeast(dp(12))
-              try { windowManager.updateViewLayout(view, params) } catch (_: Exception) {}
+              try { target?.let { windowManager.updateViewLayout(it, params) } } catch (_: Exception) {}
             }
             return true
           }
@@ -374,6 +376,7 @@ class WritelessOverlayService : Service() {
   }
 
   override fun onDestroy() {
+    getSharedPreferences("writeless_overlay", MODE_PRIVATE).edit().putBoolean("running", false).apply()
     removeBubble()
     removePanel()
     stopForeground(STOP_FOREGROUND_REMOVE)
