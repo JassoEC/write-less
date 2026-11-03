@@ -15,11 +15,13 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { copyText } from '@/infrastructure/clipboard/clipboard';
 import { getAppSetting, setAppSetting } from '@/infrastructure/database/app-settings';
 import { useMessagesStore } from '@/store/messages-store';
+import { useLanguage } from '@/i18n/language-provider';
 
 const HIDE_COPY_CONFIRMATION_KEY = 'hide_copy_confirmation';
 
 export default function MessagesScreen() {
   const router = useRouter();
+  const { t, language } = useLanguage();
   const messages = useMessagesStore((state) => state.messages);
   const isLoading = useMessagesStore((state) => state.isLoading);
   const loadMessages = useMessagesStore((state) => state.loadMessages);
@@ -34,7 +36,7 @@ export default function MessagesScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadMessages().catch(() => {
-        Alert.alert('Something went wrong', 'Your messages could not be loaded.');
+        Alert.alert(t('somethingWrong'), t('loadFailed'));
       });
     }, [loadMessages]),
   );
@@ -78,7 +80,7 @@ export default function MessagesScreen() {
         setCopyConfirmationVisible(true);
       }
     } catch {
-      Alert.alert('Copy failed', 'Please try again.');
+      Alert.alert(t('copyFailed'), t('tryAgain'));
     }
   };
 
@@ -89,20 +91,20 @@ export default function MessagesScreen() {
         await setAppSetting(HIDE_COPY_CONFIRMATION_KEY, 'true');
         setShowCopyConfirmation(false);
       } catch {
-        Alert.alert('Preference not saved', 'The confirmation will continue to appear next time.');
+        Alert.alert(t('preferenceNotSaved'), t('confirmationAgain'));
       }
     }
   };
 
   const confirmDelete = (id: string, title: string) => {
-    Alert.alert('Delete message?', `"${title}" will be permanently deleted.`, [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('deleteTitle'), t('deleteDescription', { title }), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('delete'),
         style: 'destructive',
         onPress: () => {
           void deleteMessage(id).catch(() =>
-            Alert.alert('Delete failed', 'Please try again.'),
+            Alert.alert(t('deleteFailed'), t('tryAgain')),
           );
         },
       },
@@ -113,9 +115,9 @@ export default function MessagesScreen() {
     <SafeAreaView edges={["top"]} style={styles.container}>
       <View style={styles.heading}>
         <View style={styles.headingText}>
-          <Text style={styles.title}>Your messages</Text>
+          <Text style={styles.title}>{t('yourMessages')}</Text>
           <Text style={styles.subtitle}>
-            {messages.length === 1 ? '1 saved reply' : `${messages.length} saved replies`}
+            {messages.length === 1 ? `1 ${t('savedReplyOne')}` : `${messages.length} ${t('savedReplyMany')}`}
           </Text>
         </View>
         <Pressable
@@ -123,7 +125,7 @@ export default function MessagesScreen() {
           onPress={() => router.push('/messages/new')}
           style={styles.addButton}
         >
-          <Text style={styles.addButtonText}>+ New</Text>
+          <Text style={styles.addButtonText}>+ {t('new')}</Text>
         </Pressable>
       </View>
 
@@ -132,52 +134,52 @@ export default function MessagesScreen() {
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search by title"
+          placeholder={t('searchTitle')}
           placeholderTextColor="#A1A198"
           returnKeyType="search"
           clearButtonMode="while-editing"
           style={styles.searchInput}
-          accessibilityLabel="Search messages by title"
+          accessibilityLabel={t('searchAccessibility')}
         />
       </View>
 
       {isLoading && messages.length === 0 ? (
-        <Text style={styles.helper}>Loading messages…</Text>
+        <Text style={styles.helper}>{t('loading')}</Text>
       ) : messages.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Nothing saved yet</Text>
+          <Text style={styles.emptyTitle}>{t('nothingSaved')}</Text>
           <Text style={styles.emptyDescription}>
-            Create your first reusable reply and keep it ready to copy.
+            {t('emptyDescription')}
           </Text>
           <Pressable
             onPress={() => router.push('/messages/new')}
             style={styles.emptyButton}
           >
-            <Text style={styles.emptyButtonText}>Create a message</Text>
+            <Text style={styles.emptyButtonText}>{t('createMessage')}</Text>
           </Pressable>
         </View>
       ) : filteredMessages.ordered.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>No matching messages</Text>
-          <Text style={styles.emptyDescription}>Try another title or clear your search.</Text>
+          <Text style={styles.emptyTitle}>{t('noMatches')}</Text>
+          <Text style={styles.emptyDescription}>{t('tryAnother')}</Text>
           <Pressable onPress={() => setSearch('')} style={styles.emptyButton}>
-            <Text style={styles.emptyButtonText}>Clear search</Text>
+            <Text style={styles.emptyButtonText}>{t('clearSearch')}</Text>
           </Pressable>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {filteredMessages.favorites.length > 0 && (
-            <Text style={styles.sectionLabel}>FAVORITES</Text>
+            <Text style={styles.sectionLabel}>{t('favorites')}</Text>
           )}
           {filteredMessages.ordered.map((message) => (
             <View key={message.id} style={styles.messageCard}>
               <View style={styles.cardHeading}>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={message.isFavorite ? 'Remove favorite' : 'Add favorite'}
+                  accessibilityLabel={message.isFavorite ? t('removeFavorite') : t('addFavorite')}
                   onPress={() => {
                     void toggleFavorite(message.id).catch(() =>
-                      Alert.alert('Update failed', 'The favorite status could not be changed.'),
+                      Alert.alert(t('updateFailed'), t('favoriteFailed')),
                     );
                   }}
                   hitSlop={8}
@@ -187,7 +189,7 @@ export default function MessagesScreen() {
                 </Pressable>
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel={`Copy message: ${message.title}`}
+                  accessibilityLabel={`${t('copyMessage')}: ${message.title}`}
                   onPress={() => void handleCopy(message.content)}
                   style={styles.messageText}
                 >
@@ -203,10 +205,10 @@ export default function MessagesScreen() {
                   onPress={() => router.push({ pathname: '/messages/[id]', params: { id: message.id } })}
                   style={styles.textAction}
                 >
-                  <Text style={styles.textActionText}>Edit</Text>
+                  <Text style={styles.textActionText}>{t('edit')}</Text>
                 </Pressable>
                 <Pressable onPress={() => confirmDelete(message.id, message.title)} style={styles.textAction}>
-                  <Text style={styles.deleteText}>Delete</Text>
+                  <Text style={styles.deleteText}>{t('delete')}</Text>
                 </Pressable>
               </View>
             </View>
@@ -222,9 +224,9 @@ export default function MessagesScreen() {
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.confirmationCard}>
-            <Text style={styles.confirmationTitle}>Copied to clipboard</Text>
+            <Text style={styles.confirmationTitle}>{t('copied')}</Text>
             <Text style={styles.confirmationDescription}>
-              Your message is ready to paste in the conversation.
+              {t('copiedDescription')}
             </Text>
             <Pressable
               accessibilityRole="checkbox"
@@ -235,10 +237,10 @@ export default function MessagesScreen() {
               <View style={[styles.checkbox, doNotShowCopyConfirmation && styles.checkboxChecked]}>
                 {doNotShowCopyConfirmation && <Text style={styles.checkboxTick}>✓</Text>}
               </View>
-              <Text style={styles.checkboxLabel}>Don't show this again</Text>
+              <Text style={styles.checkboxLabel}>{t('dontShowAgain')}</Text>
             </Pressable>
             <Pressable onPress={() => void dismissCopyConfirmation()} style={styles.confirmationButton}>
-              <Text style={styles.confirmationButtonText}>Got it</Text>
+              <Text style={styles.confirmationButtonText}>{t('gotIt')}</Text>
             </Pressable>
           </View>
         </View>
