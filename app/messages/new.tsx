@@ -4,9 +4,11 @@ import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useMessagesStore } from '@/store/messages-store';
+import { useLanguage } from '@/i18n/language-provider';
 
 export default function NewMessageScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const createMessage = useMessagesStore((state) => state.createMessage);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -17,7 +19,7 @@ export default function NewMessageScreen() {
     const cleanContent = content.trim();
 
     if (!cleanTitle || !cleanContent) {
-      Alert.alert('Missing information', 'Add a title and message before saving.');
+      Alert.alert(t('missingInfo'), t('addTitleAndMessage'));
       return;
     }
 
@@ -26,7 +28,7 @@ export default function NewMessageScreen() {
       await createMessage(cleanTitle, cleanContent);
       router.back();
     } catch {
-      Alert.alert('Could not save', 'Your message was not saved. Please try again.');
+      Alert.alert(t('couldNotSave'), t('saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -34,32 +36,32 @@ export default function NewMessageScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'New message' }} />
+      <Stack.Screen options={{ title: t('newMessage') }} />
       <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>TITLE</Text>
+        <Text style={styles.label}>{t('title')}</Text>
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="e.g. Delivery information"
+          placeholder={t('deliveryPlaceholder')}
           placeholderTextColor="#A1A198"
           maxLength={80}
           returnKeyType="next"
           style={styles.titleInput}
         />
-        <Text style={styles.label}>MESSAGE</Text>
+        <Text style={styles.label}>{t('message')}</Text>
         <TextInput
           value={content}
           onChangeText={setContent}
-          placeholder="Write the reply you want to reuse…"
+          placeholder={t('messagePlaceholder')}
           placeholderTextColor="#A1A198"
           multiline
           textAlignVertical="top"
           style={styles.contentInput}
         />
-        <Text style={styles.hint}>Your message is saved only on this device.</Text>
+        <Text style={styles.hint}>{t('localHint')}</Text>
         <Pressable disabled={isSaving} onPress={() => void save()} style={[styles.saveButton, isSaving && styles.disabled]}>
-          <Text style={styles.saveButtonText}>{isSaving ? 'Saving…' : 'Save message'}</Text>
+          <Text style={styles.saveButtonText}>{isSaving ? t('saving') : t('saveMessage')}</Text>
         </Pressable>
       </ScrollView>
       </SafeAreaView>
