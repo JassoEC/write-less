@@ -8,6 +8,7 @@ type OverlayLabels = {
   empty: string;
   copied: string;
   searchHint: string;
+  noMatches: string;
 };
 
 type OverlayNativeModule = {
