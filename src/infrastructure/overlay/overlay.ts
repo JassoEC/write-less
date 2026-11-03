@@ -6,6 +6,7 @@ type OverlayLabels = {
   minimize: string;
   close: string;
   empty: string;
+  copied: string;
 };
 
 type OverlayNativeModule = {
