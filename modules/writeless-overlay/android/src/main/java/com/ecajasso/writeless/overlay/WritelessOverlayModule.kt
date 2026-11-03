@@ -20,7 +20,7 @@ class WritelessOverlayModule : Module() {
     }
 
     Function("openPermissionSettings") {
-      val context = appContext.reactContext ?: return@Function
+      val context = appContext.reactContext ?: return@Function null
       val intent = Intent(
         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
         Uri.parse("package:${context.packageName}")
@@ -29,7 +29,7 @@ class WritelessOverlayModule : Module() {
     }
 
     Function("start") { labels: Map<String, String> ->
-      val context = appContext.reactContext ?: return@Function
+      val context = appContext.reactContext ?: return@Function null
       if (!Settings.canDrawOverlays(context)) {
         throw IllegalStateException("Overlay permission has not been granted.")
       }
@@ -49,7 +49,7 @@ class WritelessOverlayModule : Module() {
     }
 
     Function("stop") {
-      val context = appContext.reactContext ?: return@Function
+      val context = appContext.reactContext ?: return@Function null
       context.stopService(Intent(context, WritelessOverlayService::class.java))
     }
   }
