@@ -253,7 +253,7 @@ class WritelessOverlayService : Service() {
   }
 
   private fun readMessages(): List<Pair<String, String>> {
-    val databaseFile = getDatabasePath(DATABASE_NAME)
+    val databaseFile = File(filesDir, "SQLite/$DATABASE_NAME")
     if (!databaseFile.exists()) return emptyList()
 
     return try {
@@ -344,7 +344,7 @@ class WritelessOverlayService : Service() {
             if (view === bubble && params != null) {
               positionX = params.x
               positionY = params.y
-            } else if (view === panel && params != null) {
+            } else if (view !== bubble && params != null) {
               positionY = params.y
             }
             return true
