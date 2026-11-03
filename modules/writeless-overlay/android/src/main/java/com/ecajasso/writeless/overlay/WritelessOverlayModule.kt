@@ -16,9 +16,7 @@ class WritelessOverlayModule : Module() {
     }
 
     Function("isRunning") {
-      val context = appContext.reactContext ?: return@Function false
-      context.getSharedPreferences("writeless_overlay", 0)
-        .getBoolean("running", false)
+      WritelessOverlayService.isActive
     }
 
     Function("openPermissionSettings") {
