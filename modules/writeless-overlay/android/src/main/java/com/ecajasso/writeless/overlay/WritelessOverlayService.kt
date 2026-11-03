@@ -36,6 +36,8 @@ class WritelessOverlayService : Service() {
     private const val CHANNEL_ID = "writeless_overlay"
     private const val NOTIFICATION_ID = 5801
     private const val DATABASE_NAME = "writeless.db"
+    @Volatile var isActive = false
+      private set
   }
 
   private lateinit var windowManager: WindowManager
@@ -52,7 +54,7 @@ class WritelessOverlayService : Service() {
 
   override fun onCreate() {
     super.onCreate()
-    getSharedPreferences("writeless_overlay", MODE_PRIVATE).edit().putBoolean("running", true).apply()
+    isActive = true
     windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     createNotificationChannel()
   }
@@ -66,7 +68,7 @@ class WritelessOverlayService : Service() {
       startAsForegroundService()
       if (bubble == null && panel == null) showBubble()
     }
-    return START_STICKY
+    return START_NOT_STICKY
   }
 
   private fun startAsForegroundService() {
@@ -298,6 +300,7 @@ class WritelessOverlayService : Service() {
   }
 
   private fun openMainApp() {
+    minimize()
     val launchIntent = packageManager.getLaunchIntentForPackage(packageName) ?: return
     launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
     startActivity(launchIntent)
@@ -376,7 +379,7 @@ class WritelessOverlayService : Service() {
   }
 
   override fun onDestroy() {
-    getSharedPreferences("writeless_overlay", MODE_PRIVATE).edit().putBoolean("running", false).apply()
+    isActive = false
     removeBubble()
     removePanel()
     stopForeground(STOP_FOREGROUND_REMOVE)
