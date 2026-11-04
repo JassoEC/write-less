@@ -357,7 +357,7 @@ class WritelessOverlayService : Service() {
     feedback.addView(TextView(this).apply {
       text = message
       textSize = 13f
-      typeface = Typeface.DEFAULT_MEDIUM
+      typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
       setTextColor(Color.WHITE)
       maxLines = 1
     })
@@ -401,10 +401,10 @@ class WritelessOverlayService : Service() {
   }
 
   private fun removeCopyFeedback(expectedView: View? = null) {
-    copyFeedbackRemoval?.let(mainHandler::removeCallbacks)
-    copyFeedbackRemoval = null
     val current = copyFeedbackView ?: return
     if (expectedView != null && current !== expectedView) return
+    copyFeedbackRemoval?.let(mainHandler::removeCallbacks)
+    copyFeedbackRemoval = null
     try { windowManager.removeView(current) } catch (_: Exception) {}
     copyFeedbackView = null
   }
