@@ -19,9 +19,12 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import java.io.File
 import kotlin.math.abs
@@ -34,9 +37,13 @@ class WritelessOverlayService : Service() {
     const val EXTRA_CLOSE = "close"
     const val EXTRA_EMPTY = "empty"
     const val EXTRA_COPIED = "copied"
+    const val EXTRA_COPIED_AND_MINIMIZED = "copied_and_minimized"
+    const val EXTRA_SEARCH_HINT = "search_hint"
+    const val EXTRA_NO_MATCHES = "no_matches"
     private const val CHANNEL_ID = "writeless_overlay"
     private const val NOTIFICATION_ID = 5801
     private const val DATABASE_NAME = "writeless.db"
+    private const val PANEL_MESSAGES_HEIGHT_DP = 252 // 30% shorter than the original 360dp list area
     @Volatile var isActive = false
       private set
   }
@@ -50,7 +57,10 @@ class WritelessOverlayService : Service() {
   private var minimizeLabel = "Minimize"
   private var closeLabel = "Close"
   private var emptyLabel = "No saved messages"
-  private var copiedLabel = "Copied"
+  private var copiedLabel = "Message copied"
+  private var copiedAndMinimizedLabel = "Copied · panel minimized"
+  private var searchHint = "Search messages"
+  private var noMatchesLabel = "No matching messages"
   private var positionX = 0
   private var positionY = 220
 
@@ -68,6 +78,9 @@ class WritelessOverlayService : Service() {
       closeLabel = intent.getStringExtra(EXTRA_CLOSE) ?: closeLabel
       emptyLabel = intent.getStringExtra(EXTRA_EMPTY) ?: emptyLabel
       copiedLabel = intent.getStringExtra(EXTRA_COPIED) ?: copiedLabel
+      copiedAndMinimizedLabel = intent.getStringExtra(EXTRA_COPIED_AND_MINIMIZED) ?: copiedAndMinimizedLabel
+      searchHint = intent.getStringExtra(EXTRA_SEARCH_HINT) ?: searchHint
+      noMatchesLabel = intent.getStringExtra(EXTRA_NO_MATCHES) ?: noMatchesLabel
       startAsForegroundService()
       if (bubble == null && panel == null) showBubble()
     }
@@ -185,27 +198,43 @@ class WritelessOverlayService : Service() {
 
     container.addView(header)
 
-    val scroll = ScrollView(this).apply {
-      isFillViewport = true
+    val searchInput = EditText(this).apply {
+      hint = searchHint
+      textSize = 13f
+      setSingleLine(true)
+      setTextColor(Color.rgb(45, 49, 57))
+      setHintTextColor(Color.rgb(135, 140, 149))
+      setPadding(dp(10), 0, dp(10), 0)
+      background = rounded(Color.rgb(242, 244, 247), dp(9).toFloat())
+      imeOptions = android.view.inputmethod.EditorInfo.IME_ACTION_SEARCH
     }
-    val messages = LinearLayout(this).apply {
-      orientation = LinearLayout.VERTICAL
-    }
+    container.addView(searchInput, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38)).apply { bottomMargin = dp(8) })
+
+    val scroll = ScrollView(this).apply { isFillViewport = true }
+    val messages = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
     val rows = readMessages()
-    if (rows.isEmpty()) {
-      messages.addView(TextView(this).apply {
-        text = emptyLabel
-        textSize = 14f
-        setTextColor(Color.DKGRAY)
-        setPadding(0, dp(18), 0, dp(18))
-      })
-    } else {
-      rows.forEach { message ->
+    fun renderMessages(query: String) {
+      messages.removeAllViews()
+      val matchingRows = rows.filter { it.first.contains(query, ignoreCase = true) || it.second.contains(query, ignoreCase = true) }
+      if (matchingRows.isEmpty()) {
+        messages.addView(TextView(this).apply {
+          text = if (rows.isEmpty()) emptyLabel else noMatchesLabel
+          textSize = 13f
+          setTextColor(Color.rgb(120, 125, 134))
+          setPadding(dp(2), dp(14), 0, dp(14))
+        })
+      }
+      matchingRows.forEach { message ->
         val row = LinearLayout(this).apply {
           orientation = LinearLayout.VERTICAL
           setPadding(dp(10), dp(10), dp(10), dp(10))
           background = rounded(Color.rgb(240, 242, 246), dp(12).toFloat())
           setOnClickListener { copyMessage(message.second) }
+          setOnLongClickListener {
+            copyMessage(message.second, copiedAndMinimizedLabel)
+            minimize()
+            true
+          }
         }
         row.addView(TextView(this).apply {
           text = message.first
@@ -218,7 +247,8 @@ class WritelessOverlayService : Service() {
           text = message.second
           textSize = 12f
           setTextColor(Color.rgb(88, 94, 105))
-          maxLines = 2
+          maxLines = 1
+          ellipsize = android.text.TextUtils.TruncateAt.END
           setPadding(0, dp(4), 0, 0)
         })
         val rowParams = LinearLayout.LayoutParams(
@@ -228,10 +258,16 @@ class WritelessOverlayService : Service() {
         messages.addView(row, rowParams)
       }
     }
+    renderMessages("")
+    searchInput.addTextChangedListener(object : TextWatcher {
+      override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+      override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = renderMessages(s?.toString().orEmpty().trim())
+      override fun afterTextChanged(s: Editable?) = Unit
+    })
     scroll.addView(messages)
     container.addView(
       scroll,
-      LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(360))
+      LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(PANEL_MESSAGES_HEIGHT_DP))
     )
 
     val width = minOf(dp(340), resources.displayMetrics.widthPixels - dp(24))
@@ -239,10 +275,11 @@ class WritelessOverlayService : Service() {
       width,
       WindowManager.LayoutParams.WRAP_CONTENT,
       overlayWindowType(),
-      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+      WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
       PixelFormat.TRANSLUCENT
     ).apply {
+      softInputMode = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
       gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
       x = 0
       y = positionY.coerceAtLeast(dp(24))
@@ -284,10 +321,10 @@ class WritelessOverlayService : Service() {
     }
   }
 
-  private fun copyMessage(content: String) {
+  private fun copyMessage(content: String, feedback: String = copiedLabel) {
     val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Writeless message", content))
-    Toast.makeText(this, copiedLabel, Toast.LENGTH_SHORT).show()
+    Toast.makeText(this, feedback, Toast.LENGTH_SHORT).show()
   }
 
   private fun actionButton(symbol: String, description: String, action: () -> Unit): TextView {

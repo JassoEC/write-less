@@ -167,7 +167,7 @@ export default function MessagesScreen() {
           </Pressable>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.messageList} contentContainerStyle={styles.list} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           {filteredMessages.favorites.length > 0 && (
             <Text style={styles.sectionLabel}>{t('favorites')}</Text>
           )}
@@ -266,7 +266,8 @@ const styles = StyleSheet.create({
   emptyDescription: { color: '#77776F', fontSize: 14, lineHeight: 21, marginTop: 8, textAlign: 'center' },
   emptyButton: { backgroundColor: '#20201D', borderRadius: 12, marginTop: 22, paddingHorizontal: 20, paddingVertical: 13 },
   emptyButtonText: { color: '#FFFFFF', fontWeight: '600' },
-  list: { gap: 12, paddingBottom: 24 },
+  messageList: { flex: 1 },
+  list: { gap: 12, paddingBottom: 40 },
   sectionLabel: { color: '#898981', fontSize: 11, fontWeight: '700', letterSpacing: 1.5, marginBottom: 2, marginTop: 2 },
   messageCard: { backgroundColor: '#FFFFFF', borderColor: '#E8E8E3', borderRadius: 16, borderWidth: 1, padding: 16 },
   cardHeading: { alignItems: 'flex-start', flexDirection: 'row', gap: 10 },

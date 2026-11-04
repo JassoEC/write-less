@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { AppState, Pressable, View } from 'react-native';
+import { AppState, Pressable, ScrollView, View } from 'react-native';
 import { AppScreen } from '@/components/ui/AppScreen';
 import { AppText } from '@/components/ui/AppText';
 import { AppCard } from '@/components/ui/AppCard';
@@ -56,6 +56,9 @@ export default function SettingsScreen() {
       close: t('overlayClose'),
       empty: t('overlayEmpty'),
       copied: t('overlayCopied'),
+      copiedAndMinimized: t('overlayCopiedAndMinimized'),
+      searchHint: t('overlaySearchHint'),
+      noMatches: t('overlayNoMatches'),
     });
     setOverlayRunning(true);
   };
@@ -70,7 +73,11 @@ export default function SettingsScreen() {
     { value: 'en', label: t('english') },
   ];
 
-  return <AppScreen style={{ padding: 24, paddingTop: 32, gap: 16 }}>
+  return <AppScreen>
+    <ScrollView
+      contentContainerStyle={{ padding: 24, paddingTop: 32, paddingBottom: 40, gap: 16 }}
+      showsVerticalScrollIndicator={false}
+    >
     <AppText style={{ fontSize: 24 }} weight="bold">{t('settings')}</AppText>
     <AppText tone="secondary" style={{ fontSize: 14, lineHeight: 21 }}>{t('customize')}</AppText>
     <AppCard style={{ gap: 8 }}>
@@ -113,5 +120,6 @@ export default function SettingsScreen() {
         </AppText>
       </Pressable>
     </AppCard> : null}
+    </ScrollView>
   </AppScreen>;
 }
