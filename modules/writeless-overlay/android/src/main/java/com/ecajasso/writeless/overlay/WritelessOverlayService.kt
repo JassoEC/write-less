@@ -15,6 +15,8 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
@@ -25,7 +27,6 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.Toast
 import java.io.File
 import kotlin.math.abs
 
@@ -53,6 +54,9 @@ class WritelessOverlayService : Service() {
   private var panel: View? = null
   private var bubbleParams: WindowManager.LayoutParams? = null
   private var panelParams: WindowManager.LayoutParams? = null
+  private val mainHandler = Handler(Looper.getMainLooper())
+  private var copyFeedbackView: View? = null
+  private var copyFeedbackRemoval: Runnable? = null
   private var openAppLabel = "Open app"
   private var minimizeLabel = "Minimize"
   private var closeLabel = "Close"
@@ -324,7 +328,85 @@ class WritelessOverlayService : Service() {
   private fun copyMessage(content: String, feedback: String = copiedLabel) {
     val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText("Writeless message", content))
-    Toast.makeText(this, feedback, Toast.LENGTH_SHORT).show()
+    showCopyFeedback(feedback)
+  }
+
+  private fun showCopyFeedback(message: String) {
+    removeCopyFeedback()
+
+    val feedback = LinearLayout(this).apply {
+      orientation = LinearLayout.HORIZONTAL
+      gravity = Gravity.CENTER
+      setPadding(dp(16), dp(11), dp(16), dp(11))
+      background = rounded(Color.rgb(35, 39, 48), dp(24).toFloat())
+      elevation = dp(10).toFloat()
+      alpha = 0f
+      translationY = -dp(6).toFloat()
+      contentDescription = message
+      importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+    }
+
+    feedback.addView(TextView(this).apply {
+      text = "✓"
+      textSize = 15f
+      typeface = Typeface.DEFAULT_BOLD
+      setTextColor(Color.rgb(143, 220, 165))
+      setPadding(0, 0, dp(8), 0)
+    })
+
+    feedback.addView(TextView(this).apply {
+      text = message
+      textSize = 13f
+      typeface = Typeface.DEFAULT_MEDIUM
+      setTextColor(Color.WHITE)
+      maxLines = 1
+    })
+
+    val params = WindowManager.LayoutParams(
+      WindowManager.LayoutParams.WRAP_CONTENT,
+      WindowManager.LayoutParams.WRAP_CONTENT,
+      overlayWindowType(),
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+      PixelFormat.TRANSLUCENT
+    ).apply {
+      gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+      val panelTop = panelParams?.y ?: dp(88)
+      y = (panelTop - dp(58)).coerceAtLeast(dp(24))
+    }
+
+    try {
+      windowManager.addView(feedback, params)
+      copyFeedbackView = feedback
+      feedback.animate()
+        .alpha(1f)
+        .translationY(0f)
+        .setDuration(160)
+        .start()
+
+      val removal = Runnable {
+        feedback.animate()
+          .alpha(0f)
+          .translationY(-dp(6).toFloat())
+          .setDuration(140)
+          .withEndAction { removeCopyFeedback(feedback) }
+          .start()
+      }
+      copyFeedbackRemoval = removal
+      mainHandler.postDelayed(removal, 1_500L)
+    } catch (_: Exception) {
+      copyFeedbackView = null
+    }
+  }
+
+  private fun removeCopyFeedback(expectedView: View? = null) {
+    copyFeedbackRemoval?.let(mainHandler::removeCallbacks)
+    copyFeedbackRemoval = null
+    val current = copyFeedbackView ?: return
+    if (expectedView != null && current !== expectedView) return
+    try { windowManager.removeView(current) } catch (_: Exception) {}
+    copyFeedbackView = null
   }
 
   private fun actionButton(symbol: String, description: String, action: () -> Unit): TextView {
@@ -430,6 +512,7 @@ class WritelessOverlayService : Service() {
     isActive = false
     removeBubble()
     removePanel()
+    removeCopyFeedback()
     stopForeground(STOP_FOREGROUND_REMOVE)
     super.onDestroy()
   }
